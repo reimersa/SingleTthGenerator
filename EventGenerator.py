@@ -57,8 +57,8 @@ class EventGenerator:
         for config in self.configs:
             mt, mh = get_mt_mh(config=config)
             if self.submit:
-                ensureDirectory(self.cardfolder+'/%s' % (self.processname))
-                make_card(card_template_folder=self.cardfolder, card_output_folder=self.cardfolder+'/%s' % (self.processname), processname=self.processname, tag=self.tag, mt=mt, mh=mh, lhapdfid=pdfs_per_year[self.year])
+                ensureDirectory(self.cardfolder+'/%s/%s' % (self.processname, self.year))
+                make_card(card_template_folder=self.cardfolder, card_output_folder=self.cardfolder+'/%s/%s' % (self.processname, self.year), processname=self.processname, tag=self.tag, mt=mt, mh=mh, lhapdfid=pdfs_per_year[self.year])
                 print green('--> Produced cards for sample no. %i.' % (idx+1))
             idx += 1
 
@@ -69,7 +69,7 @@ class EventGenerator:
 
     def SubmitGridpacks(self):
         # Submit gridpacks based on cards created above
-        ensureDirectory(self.gridpackfolder)
+        ensureDirectory(os.path.join(self.gridpackfolder, self.processname, str(self.year)))
         for config in self.configs:
             mt, mh = get_mt_mh(config=config)
             jobname = samplename = get_samplename(basename=self.processname, mt=mt, mh=mh, tag=self.tag)
@@ -79,11 +79,11 @@ class EventGenerator:
                 ('error'      ,  os.path.join(self.workdir, 'gridpacks_$(ClusterId)_$(ProcId).err')),
                 ('log'        ,  os.path.join(self.workdir, 'gridpacks_$(ClusterId).log')),
                 ('environment', 'ClusterId=$(ClusterId);ProcId=$(ProcId);SCRAM_ARCH=%s;CMSSW_VERSION=%s;PATH=%s;LD_LIBRARY_PATH=%s;KRB5CCNAME=$KRB5CCNAME' % (self.arch_tag_gp, self.cmssw_tag_gp, os.environ['PATH'], os.environ['LD_LIBRARY_PATH'])),
-                ('arguments'  ,   '"%s %s %s %s %s %s %s"' % (os.path.join(self.scriptfolder, 'run_gridpacks.sh'), self.mgfolder, jobname, self.cardfolder+'/%s' % (self.processname), self.gridpackfolder, 'local', self.cmssw_path_gp)),
+                ('arguments'  ,   '"%s %s %s %s %s %s %s"' % (os.path.join(self.scriptfolder, 'run_gridpacks.sh'), self.mgfolder, jobname, self.cardfolder+'/%s/%s' % (self.processname, str(self.year)), os.path.join(self.gridpackfolder, self.processname, str(self.year)), 'local', self.cmssw_path_gp)),
                 ('transfer_output_files', '""'),
                 ('stream_output', 'True'),
                 ('stream_error', 'True'),
-                ('+JobFlavour', '"workday"'),
+                ('+JobFlavour', '"longlunch"'), # workday
                 ('queue'      , '')
             ])
             submissionscriptname = os.path.join(self.scriptfolder, 'submit_gridpack.sub')

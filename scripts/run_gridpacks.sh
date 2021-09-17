@@ -50,5 +50,8 @@ peval "$TASKCMD"
 
 peval "rm ${CMSSW_MG_FOLDER}/link_carddir_${JOBNAME}_${ClusterId}_${ProcId}"
 
+echo "--> content of folder that should contain gridpack:"
+peval "ls -lrth ${TMPDIR}/"
+
 echo "--> Going to move the gridpack to storage"
 peval "mv ${TMPDIR}/*${JOBNAME}*_tarball.tar.xz ${GRIDPACKDIR}"

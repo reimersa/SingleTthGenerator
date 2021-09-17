@@ -1,6 +1,0 @@
-set param_card mass 6000006  $MT
-set param_card ktlh 3        0.100000e+00
-set param_card mass 25       $MH
-set run_card   scale         $SCALE
-set run_card   dsqrt_q2fact1 $SCALE
-set run_card   dsqrt_q2fact2 $SCALE
