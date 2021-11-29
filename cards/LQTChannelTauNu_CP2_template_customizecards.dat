@@ -1,0 +1,9 @@
+set param_card  mass 9000007 $MLQ
+set param_card  nplqcoup 1 1.0
+set param_card  nplqcoup 2 1.0
+set param_card  nplqcoup 3 -1.0
+set param_card  nplqcoup 4 0.1
+set param_card  nplqcoup 5 -0.1
+set param_card  DECAY 9000007 auto
+set run_card pdlabel lhapdf
+set run_card lhaid $PDF

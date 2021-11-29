@@ -55,10 +55,16 @@ class EventGenerator:
 
         idx = 0
         for config in self.configs:
-            mt, mh = get_mt_mh(config=config)
+            if 'TprimeBToTH_T' in self.processname:
+                mt, mh = get_mt_mh(config=config)
+            elif 'LQTChannel' in self.processname:
+                mlq = config # simple list
             if self.submit:
                 ensureDirectory(self.cardfolder+'/%s/%s' % (self.processname, self.year))
-                make_card(card_template_folder=self.cardfolder, card_output_folder=self.cardfolder+'/%s/%s' % (self.processname, self.year), processname=self.processname, tag=self.tag, mt=mt, mh=mh, lhapdfid=pdfs_per_year[self.year])
+                if 'TprimeBToTH_T' in self.processname:
+                    make_card_singletth(card_template_folder=self.cardfolder, card_output_folder=self.cardfolder+'/%s/%s' % (self.processname, self.year), processname=self.processname, tag=self.tag, mt=mt, mh=mh, lhapdfid=pdfs_per_year[self.year])
+                elif 'LQTChannel' in self.processname:
+                    make_card_lqtchannel(card_template_folder=self.cardfolder, card_output_folder=self.cardfolder+'/%s/%s' % (self.processname, self.year), processname=self.processname, tag=self.tag, mlq=mlq, lhapdfid=pdfs_per_year[self.year])
                 print green('--> Produced cards for sample no. %i.' % (idx+1))
             idx += 1
 
@@ -68,11 +74,16 @@ class EventGenerator:
 
 
     def SubmitGridpacks(self):
+        print len(self.configs)
         # Submit gridpacks based on cards created above
         ensureDirectory(os.path.join(self.gridpackfolder, self.processname, str(self.year)))
         for config in self.configs:
-            mt, mh = get_mt_mh(config=config)
-            jobname = samplename = get_samplename(basename=self.processname, mt=mt, mh=mh, tag=self.tag)
+            if 'TprimeBToTH_T' in self.processname:
+                mt, mh = get_mt_mh(config=config)
+                jobname = samplename = get_samplename(basename=self.processname, mt=mt, mh=mh, tag=self.tag)
+            elif 'LQTChannel' in self.processname:
+                mlq = config # simple list
+                jobname = samplename = '%s_M%i%s' % (self.processname, mlq, format_tag(self.tag))
             submissionsettings = OrderedDict([
                 ('executable' ,  os.path.join(self.scriptfolder, 'singularity_wrapper.sh')),
                 ('output'     ,  os.path.join(self.workdir, 'gridpacks_$(ClusterId)_$(ProcId).out')),
@@ -122,8 +133,12 @@ class EventGenerator:
 
         # Create command file for array of jobs
         for config in self.configs:
-            mt, mh = get_mt_mh(config=config)
-            jobname = samplename = get_samplename(basename=self.processname, mt=mt, mh=mh, tag=self.tag)
+            if 'TprimeBToTH_T' in self.processname:
+                mt, mh = get_mt_mh(config=config)
+                jobname = samplename = get_samplename(basename=self.processname, mt=mt, mh=mh, tag=self.tag)
+            elif 'LQTChannel' in self.processname:
+                mlq = config # simple list
+                jobname = samplename = '%s_M%i%s' % (self.processname, mlq, format_tag(self.tag))
             commandfilename = commandfilebase + jobname + '.txt'
             f = open(commandfilename, 'w')
             indices = -1
@@ -140,7 +155,7 @@ class EventGenerator:
                     infilename   = self.T2_director_root+self.T2_path+'/'+self.folderstructure[generation_step]['infilepathtag']+'/'+jobname+'/%s_%i.root' % (self.folderstructure[generation_step]['infilenamebase'], i+1)
                     command = getcmsRunCommand(pset=self.folderstructure[generation_step]['pset'], infilename=infilename, outfilename=outfilename, N=self.nevents, ncores=ncores)
                 else:
-                    infilename   = self.gridpackfolder + '/' + jobname + '_' + self.arch_tag_gp + '_' + self.cmssw_tag_gp + '_tarball.tar.xz'
+                    infilename   = self.gridpackfolder + '/' + self.processname + '/' + str(self.year) + '/' + jobname + '_' + self.arch_tag_gp + '_' + self.cmssw_tag_gp + '_tarball.tar.xz'
                     command = getcmsRunCommand(pset=self.folderstructure[generation_step]['pset'], gridpack=infilename, outfilename=outfilename, N=self.nevents, ncores=ncores)
                 f.write(command + '\n')
                 njobs += 1
@@ -156,7 +171,7 @@ class EventGenerator:
                 ('log'        ,  os.path.join(self.workdir, '%s_$(ClusterId).log' % (self.folderstructure[generation_step]['jobnametag']))),
                 ('environment', 'ClusterId=$(ClusterId);ProcId=$(ProcId);X509_VOMS_DIR=/cvmfs/grid.cern.ch/etc/grid-security/vomsdir;X509_CERT_DIR=/cvmfs/grid.cern.ch/etc/grid-security/certificates;X509_USER_PROXY=%s;SCRAM_ARCH=%s;CMSSW_VERSION=%s;PATH=%s;LD_LIBRARY_PATH=%s;KRB5CCNAME=$KRB5CCNAME' % (os.environ['X509_USER_PROXY'], self.arch_tag_gp, self.folderstructure[generation_step]['cmsswtag'], os.environ['PATH'], os.environ['LD_LIBRARY_PATH'])),
                 ('arguments'  ,   '"%s %s %s %s %s %s %s"' % (os.path.join(self.scriptfolder, 'submit_cmsRun_command.sh'), self.generatorfolder, self.arch_tag_gp, self.workarea+'/'+self.folderstructure[generation_step]['cmsswtag'], self.T2_director+self.T2_path+'/'+self.folderstructure[generation_step]['pathtag']+'/'+jobname, commandfilename, os.path.join(self.scriptfolder, 'copy_files_gfal.sh'))),
-                # ('stream_output', 'True'),
+                ('stream_output', 'True'),
                 ('stream_error', 'True'),
                 ('transfer_output_files', '""'),
                 ('RequestCpus', ncores),

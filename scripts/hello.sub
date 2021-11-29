@@ -1,0 +1,6 @@
+executable = /afs/cern.ch/user/a/areimers/SingleTth/Generator/scripts/hello.sh
+output = /afs/cern.ch/user/a/areimers/workdir_eos/gridpacks_$(ClusterId)_$(ProcId).out
+error = /afs/cern.ch/user/a/areimers/workdir_eos/gridpacks_$(ClusterId)_$(ProcId).err
+log = /afs/cern.ch/user/a/areimers/workdir_eos/gridpacks_$(ClusterId).log
++JobFlavour = "espresso"
+queue

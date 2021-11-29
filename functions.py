@@ -33,7 +33,7 @@ def create_submitfile(settings, outfilename):
 
 
 
-def make_card(card_template_folder, card_output_folder, processname, tag, mt, mh, lhapdfid, verbose=True):
+def make_card_singletth(card_template_folder, card_output_folder, processname, tag, mt, mh, lhapdfid, verbose=True):
 
     # PDF CMS standard (Paolo):
     # 2016 LO:       263000
@@ -62,6 +62,38 @@ def make_card(card_template_folder, card_output_folder, processname, tag, mt, mh
         'MH':      mh,
         'MT':      mt,
         'SCALE':   mt,
+        'OUTPUT':  outputfoldername,
+        'PDF':     lhapdfid
+    }
+
+    # replace values in the cards
+    for card in newcards:
+        replace_placeholders(card=card, replacement_dict=replacement_dict, verbose=verbose)
+    if verbose:
+        print green('--> Done making one set of cards.\n')
+
+
+def make_card_lqtchannel(card_template_folder, card_output_folder, processname, tag, mlq, lhapdfid, verbose=True):
+
+    samplename = '%s_M%i%s' % (processname, mlq, format_tag(tag))
+    cardbasename = processname + '_template'
+    cardtypes = ['proc_card.dat', 'run_card.dat', 'customizecards.dat', 'extramodels.dat']
+    cards = [card_template_folder + '/' + cardbasename + '_' + c for c in cardtypes]
+
+    newcards = []
+    for card in cards:
+        template = card
+        newcard = card.replace('%s_template' % (processname), samplename).replace(card_template_folder, card_output_folder)
+        newcards.append(newcard)
+
+        # create newcard
+        command = 'cp %s %s' % (template, newcard)
+        os.system(command)
+
+    outputfoldername = samplename
+
+    replacement_dict = {
+        'MLQ':     mlq,
         'OUTPUT':  outputfoldername,
         'PDF':     lhapdfid
     }
